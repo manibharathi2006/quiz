@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechMaster Quiz ⚡ — Industrial & Electronics Challenge</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ── Decorative katakana background text ── -->
+  <div class="deco-text deco-tl">デンキ</div>
+  <div class="deco-text deco-br">データ</div>
+
+  <!-- ── Animated starfield canvas ── -->
+  <div id="starfield">
+    <canvas id="stars"></canvas>
+  </div>
+
+  <!-- ── Confetti overlay (shown on high scores) ── -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- ════════════════════════════════════════
+       APP WRAPPER — all screens live inside
+  ════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- ══════════ SCREEN 1: REGISTER ══════════ -->
+    <div class="screen active" id="screen-register">
+
+      <!-- Logo / Header -->
+      <div class="logo-block">
+        <div class="logo-jp">テックマスタークイズ</div>
+        <div class="logo-main">TECHMASTER QUIZ</div>
+        <div class="logo-sub">Industrial &amp; Electronics Challenge</div>
+        <div class="logo-divider"></div>
+
+        <!-- Category badges row -->
+        <div class="cat-badges" style="justify-content:center;">
+          <span class="cat-badge cat-plc">⚡ PLC</span>
+          <span class="cat-badge cat-data">🔢 Digital Basics</span>
+          <span class="cat-badge cat-comp">📡 Instrumentation</span>
+          <span class="cat-badge cat-elec">🔌 Electrical</span>
+        </div>
+      </div>
+
+      <!-- Registration card -->
+      <div class="card">
+        <div class="section-title">Register to Compete</div>
+
+        <!-- Name field -->
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="reg-name" placeholder="Enter your name..." autocomplete="off">
+        </div>
+
+        <!-- Email field (optional) -->
+        <div class="form-group">
+          <label>Email (optional)</label>
+          <input type="text" id="reg-email" placeholder="yourname@example.com" autocomplete="off">
+        </div>
+
+        <!-- Rules list -->
+        <div style="margin-bottom:20px;">
+          <div class="section-title" style="font-size:11px;">Quiz Rules</div>
+          <ul class="rules">
+            <li><span class="icon">📋</span><span><strong>50 Questions</strong> — Digital Basics, PLC, Instrumentation &amp; Electrical</span></li>
+            <li><span class="icon">⏱️</span><span><strong>30 Minutes</strong> total time (1800 seconds)</span></li>
+            <li><span class="icon">🎯</span><span>Each correct answer = <strong>2 points</strong>. No negative marking.</span></li>
+            <li><span class="icon">🔀</span><span>You can jump between questions and review before submitting.</span></li>
+            <li><span class="icon">🏆</span><span>Your score will appear on the live <strong>Leaderboard</strong>.</span></li>
+          </ul>
+        </div>
+
+        <!-- Start button -->
+        <div class="text-center">
+          <button class="btn btn-primary" onclick="startQuiz()">▶ START QUIZ</button>
+        </div>
+      </div>
+
+    </div><!-- /screen-register -->
+
+
+    <!-- ══════════ SCREEN 2: QUIZ ══════════ -->
+    <div class="screen" id="screen-quiz">
+
+      <!-- Top stats bar -->
+      <div class="quiz-header">
+        <div class="quiz-info">
+          <div class="info-chip">👤 <span id="display-name" class="val">—</span></div>
+          <div class="info-chip">✅ <span id="score-live" class="val">0</span> pts</div>
+          <div class="info-chip">📝 <span id="answered-count" class="val">0</span>/50</div>
+        </div>
+        <!-- Countdown timer -->
+        <div id="timer-display">30:00</div>
+      </div>
+
+      <!-- Progress bar + label -->
+      <div style="width:100%;">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-text" id="progress-text">Question 1 of 50</div>
+      </div>
+
+      <!-- Question navigator dots -->
+      <div class="card" style="padding:16px;">
+        <div class="section-title" style="font-size:10px;margin-bottom:10px;">Question Navigator</div>
+        <div class="q-nav" id="q-nav"></div>
+      </div>
+
+      <!-- Active question card -->
+      <div class="card" id="q-card">
+        <div class="q-category" id="q-cat"></div>
+        <div class="q-number"  id="q-num"></div>
+        <div class="q-text"    id="q-text"></div>
+
+        <!-- Inline correct/wrong feedback strip -->
+        <div class="feedback-bar" id="feedback-bar"></div>
+
+        <!-- Answer options injected by JS -->
+        <div class="options" id="options-container"></div>
+
+        <!-- Prev / Next navigation -->
+        <div class="flex-between mt24">
+          <button class="btn btn-sm"
+            style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:var(--muted);"
+            onclick="navigate(-1)">← PREV</button>
+          <button class="btn btn-sm btn-cyan" onclick="navigate(1)">NEXT →</button>
+        </div>
+      </div>
+
+      <!-- Submit quiz button -->
+      <button class="btn btn-gold" style="width:100%;padding:18px;" onclick="confirmSubmit()">
+        🏁 SUBMIT QUIZ
+      </button>
+
+    </div><!-- /screen-quiz -->
+
+
+    <!-- ══════════ SCREEN 3: RESULTS ══════════ -->
+    <div class="screen" id="screen-results">
+
+      <!-- Results header -->
+      <div class="logo-block" style="padding-top:10px;">
+        <div class="logo-main" style="font-size:clamp(22px,4vw,36px);">QUIZ COMPLETE</div>
+        <div class="logo-divider"></div>
+      </div>
+
+      <!-- Score hero card -->
+      <div class="card">
+        <div class="result-hero">
+          <div style="font-size:60px;margin-bottom:8px;" id="result-emoji">🏆</div>
+          <div class="result-score" id="result-score">0</div>
+          <div class="result-label">POINTS</div>
+          <div class="result-grade" id="result-grade"></div>
+          <div style="color:var(--muted);font-size:14px;" id="result-name-display"></div>
+        </div>
+
+        <!-- Quick stats grid -->
+        <div class="stat-grid mt16">
+          <div class="stat-box">
+            <div class="s-val" style="color:var(--correct);" id="r-correct">0</div>
+            <div class="s-label">Correct</div>
+          </div>
+          <div class="stat-box">
+            <div class="s-val" style="color:var(--wrong);" id="r-wrong">0</div>
+            <div class="s-label">Wrong</div>
+          </div>
+          <div class="stat-box">
+            <div class="s-val" style="color:var(--muted);" id="r-skip">0</div>
+            <div class="s-label">Skipped</div>
+          </div>
+          <div class="stat-box">
+            <div class="s-val" style="color:var(--neon3);" id="r-pct">0%</div>
+            <div class="s-label">Accuracy</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per-category breakdown bars -->
+      <div class="card">
+        <div class="section-title">Category Breakdown</div>
+        <div id="cat-breakdown"></div>
+      </div>
+
+      <!-- Collapsible answer review -->
+      <div class="card">
+        <div class="flex-between" style="margin-bottom:16px;">
+          <div class="section-title" style="margin-bottom:0;">Answer Review</div>
+          <button class="btn btn-sm"
+            style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:var(--muted);"
+            onclick="toggleReview()">TOGGLE</button>
+        </div>
+        <!-- Injected by buildResults() -->
+        <div id="answer-review" style="display:none;"></div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="card">
+        <div class="section-title">🏆 Leaderboard</div>
+        <!-- Injected by renderLeaderboard() -->
+        <div id="leaderboard-list"></div>
+      </div>
+
+      <!-- Retake button -->
+      <button class="btn btn-primary" onclick="retake()">↺ RETAKE QUIZ</button>
+
+    </div><!-- /screen-results -->
+
+  </div><!-- /app -->
+
+  <!-- JavaScript (loaded last so DOM is ready) -->
+  <script src="script.js"></script>
+
+</body>
+</html>
